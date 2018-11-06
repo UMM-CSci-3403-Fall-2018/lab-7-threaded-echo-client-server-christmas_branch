@@ -9,6 +9,8 @@ class KeyboardReader implements Runnable {
 	public OutputStream socketOutput;
 	public Socket socket;
 
+	// Takes socket and pushes data from standard input into the OutputStream
+	// Shuts down outputStream when done to let server know when to start
 	public KeyboardReader(Socket socket) throws IOException {
 		this.socketOutput = socket.getOutputStream();
 		this.socket = socket;
@@ -25,6 +27,7 @@ class KeyboardReader implements Runnable {
 		}
 	}
 
+// Takes an inputStream and puts data into standard output
 class ServerReader implements Runnable {
 	public InputStream socketInput;
 	public ServerReader(InputStream socketInput) {
@@ -55,24 +58,21 @@ public class EchoClient {
 	private void start() throws IOException {
 
 		try {
-
+			// Creates socket
 			Socket socket = new Socket("localhost", PORT_NUMBER);
-
+			// Creates inputStream
 			InputStream socketInputStream = socket.getInputStream();
-			//OutputStream socketOutputStream = socket.getOutputStream();
-			//int readByte;
-
+			// Starts thread that handles the output to the server
 			Thread output = new Thread(new KeyboardReader(socket));
 			output.start();
-
+			// Starts thread that handles the input from the server
 			Thread input = new Thread(new ServerReader(socketInputStream));
 			input.start();
-
-			//output.join();
+			// Ends the input just in case
 			input.join();
-
+			// Flushes out standard output just in case
 			System.out.flush();
-
+			// Closes socket thus disconnecting from the server
 			socket.close();
 		} catch (InterruptedException iex) {
 			System.out.println("Exception in thread: "+iex.getMessage());

@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 
+// Takes a socket and creates both and input and output stream
+// Takes data from input and moves it into the output, sends output back to client
 class serverWork implements Runnable {
 	public OutputStream socketOutput;
 	public InputStream socketInput;
@@ -38,10 +40,14 @@ public class EchoServer {
 	}
 
 	private void start() throws IOException, InterruptedException {
+		// Creates serverSocket
 		ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
-		ExecutorService executor = Executors.newFixedThreadPool(20);
+		// Creates a thread pool of 100 threads to handle 100 connections
+		ExecutorService executor = Executors.newFixedThreadPool(100);
 		while (true) {
+			// Accepts client request to connect
 			Socket socket = serverSocket.accept();
+			// Starts a thread from the thread pool
 			executor.execute(new serverWork(socket));
 			}
 		}
