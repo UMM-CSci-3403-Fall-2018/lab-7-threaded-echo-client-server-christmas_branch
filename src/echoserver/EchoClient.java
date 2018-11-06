@@ -6,9 +6,12 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 class KeyboardReader implements Runnable {
-	public static OutputStream socketOutput;
-	public KeyboardReader(OutputStream socketOutput) {
-		this.socketOutput = socketOutput;
+	public OutputStream socketOutput;
+	public Socket socket;
+
+	public KeyboardReader(Socket socket) throws IOException {
+		this.socketOutput = socket.getOutputStream();
+		this.socket = socket;
 	}
 	public void run() {
 		try{
@@ -17,25 +20,27 @@ class KeyboardReader implements Runnable {
 				socketOutput.write(readByte);
 				socketOutput.flush();
 			}
+			socket.shutdownOutput();
 		} catch (IOException io) {}
 		}
 	}
 
-	class ServerReader implements Runnable {
-		public static InputStream socketInput;
-		public ServerReader(InputStream socketInput) {
-			this.socketInput = socketInput;
-		}
+class ServerReader implements Runnable {
+	public InputStream socketInput;
+	public ServerReader(InputStream socketInput) {
+		this.socketInput = socketInput;
+	}
 
-		public void run()  {
-			try {
-				int socketByte;
-				while((socketByte = socketInput.read()) != -1) {
-					System.out.write(socketByte);
-				}
-			} catch (IOException io) {}
+	public void run()  {
+		try {
+			int socketByte;
+			while((socketByte = socketInput.read()) != -1) {
+				System.out.write(socketByte);
+				System.out.flush();
 			}
+		} catch (IOException io) {}
 		}
+	}
 
 
 
@@ -54,16 +59,16 @@ public class EchoClient {
 			Socket socket = new Socket("localhost", PORT_NUMBER);
 
 			InputStream socketInputStream = socket.getInputStream();
-			OutputStream socketOutputStream = socket.getOutputStream();
-			int readByte;
+			//OutputStream socketOutputStream = socket.getOutputStream();
+			//int readByte;
 
-			Thread output = new Thread(new KeyboardReader(socketOutputStream));
+			Thread output = new Thread(new KeyboardReader(socket));
 			output.start();
 
 			Thread input = new Thread(new ServerReader(socketInputStream));
 			input.start();
 
-			output.join();
+			//output.join();
 			input.join();
 
 			System.out.flush();
